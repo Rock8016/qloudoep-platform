@@ -36,7 +36,7 @@ import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
-// @EnableReactiveMethodSecurity
+@EnableReactiveMethodSecurity
 public class DemoWebfluxSecurityConfig {
 
 	private final Logger logger = LoggerFactory.getLogger(DemoWebfluxSecurityConfig.class);
@@ -76,7 +76,7 @@ public class DemoWebfluxSecurityConfig {
 						// .pathMatchers(HttpMethod.PUT, "/api/**").hasAuthority("SCOPE_message:write")
 						// .pathMatchers(HttpMethod.DELETE,
 						// "/api/**").hasAuthority("SCOPE_message:write")
-						// .pathMatchers("/api/**").hasAnyRole("ROLE_user", "ROLE_user-premium")
+						.pathMatchers("/api/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
 						.anyExchange().authenticated()
 				)
 				// .oauth2ResourceServer(ServerHttpSecurity.OAuth2ResourceServerSpec::opaqueToken)
