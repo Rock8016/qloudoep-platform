@@ -1,0 +1,23 @@
+spring:
+    cloud:
+        consul:
+            enabled: true
+            scheme: http
+            host: localhost
+            port: 8500
+            retry:
+                initial-interval: 2000
+                max-attempts: 10
+                max-interval: 5000
+            config:
+                #acl-token: ''
+                enabled: false
+                prefix: config
+                #defaultContext: apps
+                profileSeparator: "::"
+                watch:
+                    enabled: true
+                    delay: 5000
+                    wait-time: 55
+                format: YAML
+                name: springcloud-demo

@@ -1,0 +1,44 @@
+package com.hrjk.fin.demo.security;
+
+import java.util.Collection;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+
+import reactor.core.publisher.Mono;
+
+// @Component
+public class JwtWebFilter implements WebFilter {
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        // exchange.getResponse().getHeaders().add("web-filter", "web-filter-test");
+        ServerHttpRequest req = exchange.getRequest();
+        String bearJwt = exchange.getRequest().getHeaders().getFirst("Authorization");
+        String authToken = bearJwt.replace("Bear ", "");
+        if (jwtTokenUtil.validateToken(authToken)) {
+            OAuth2User principal = null;
+            Collection<? extends GrantedAuthority> authorities = null;
+            String clientRegistrationId = null;
+            
+            //FIXME
+            OAuth2AuthenticationToken oauth2Authentication = new OAuth2AuthenticationToken(principal, authorities,
+                    clientRegistrationId);
+            // logger.info("authenticated user " + username + ", setting security context");
+            SecurityContextHolder.getContext().setAuthentication(oauth2Authentication);
+        }
+        return chain.filter(exchange);
+    }
+
+}

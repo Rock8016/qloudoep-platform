@@ -1,0 +1,271 @@
+server:
+    port: 8888
+management:
+    endpoint:
+        shutdown:
+            enabled: false
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+
+spring:
+    application:
+        name: "springcloud-demo"
+    main:
+        lazy-initialization: true
+        allow-bean-definition-overriding: false
+        # web-application-type: REACTIVE
+    #flyway config
+    # flyway:
+    #     enabled: true
+    #     locations: classpath:db/migration
+    #     url: jdbc:mysql://192.168.11.230/tags
+    #     username: root
+    #     password: 'hrjk@123'
+    security:
+        oauth2:
+            resourceserver:
+                # opaque-token:
+                #     introspection-uri: http://192.168.11.230:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/token/introspect
+                #     client-id: spring-security
+                #     client-secret: 40c00387-ed52-4857-9b1f-36a84803e654
+                jwt:
+                    jwk-set-uri: http://192.168.11.230:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/certs
+                #     public-key-location: 'classpath:keycloak-cert.pub'
+                #     issuer-uri: http://192.168.11.230:8080/auth/realms/spring-boot-quickstart
+                #     jwk-set-uri:  http://192.168.11.230:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/certs
+            # useful for front-end app only
+            # client:
+            #     provider:
+            #         keycloak:
+            #             issuer-uri: http://192.168.11.230:8080/auth/realms/spring-boot-quickstart
+            #     registration:
+            #         keycloak:
+            #             client-id: spring-security
+            #             client-secret: 40c00387-ed52-4857-9b1f-36a84803e654
+            #             provider: keycloak
+            #             scope: read:user,public_repo
+
+    # R2DBC config
+    r2dbc:
+        url: "r2dbc:mysql://192.168.11.230/tags"
+        username: root
+        password: "hrjk@123"
+        initialization-mode: always
+        continue-on-error: true
+        pool:
+            enabled: true
+            initial-size: 50
+            max-idle-time: 10m
+            max-size: 90
+            validation-query: "select 1 from dual"
+    #springcloud
+    cloud:
+        loadbalancer:
+            ribbon:
+                enabled: false
+        circuitbreaker:
+            resilience4j:
+                enabled: true
+        bus:
+            enabled: true
+            destination: springCloudBus
+            ack:
+                enabled: true
+        stream:
+            default:
+                group: SpringCloud-Bus
+        discovery:
+            enabled: true
+        consul:
+            enabled: true
+            scheme: http
+            host: localhost
+            port: 8500
+            retry:
+                initial-interval: 2000
+                max-attempts: 10
+                max-interval: 5000
+            discovery:
+                enabled: true
+                #acl-token: ''
+                register: true
+                deregister: true
+                #datacenters: dc1
+                tags: cloudservice
+                instance-id: ${spring.application.name}:${server.port}
+                #instance-id: 'springcloud-demo:8888'
+                #server-list-query-tags: type=cloudservice
+                register-health-check: true
+                catalog-services-watch-timeout: 3
+                catalog-services-watch-delay: 3000
+
+                health-check-tls-skip-verify: true
+                health-check-timeout: 6s
+                health-check-path: /actuator/health
+                health-check-interval: 30s
+                health-check-critical-timeout: 60s
+    kafka:
+        bootstrap-servers: 192.168.11.230:9092 #配置 kafka 服务器的地址和端口
+        #kafka groupId must be configured by spring.cloud.stream.default.group
+        #consumer:
+        #    group-id: SpringCloud-Bus
+
+#logging config
+logging:
+    level:
+        root: info
+        org.springframework.web: debug
+        org.springframework.data: debug
+        org.springframework.controllers: debug
+        org.springframework.data.r2db: debug
+        org.springframework.security: debug
+        org.springframework.boot.autoconfigure.security: debug
+        com.hrjk.fin: debug
+    file: "logs/spring-boot-logging.log"
+
+# keycloak:
+#     realm: spring-boot-quickstart
+#     auth-server-url: http://localhost:8180/auth
+#     ssl-required: external
+#     resource: app-authz-rest-springboot
+#     bearer-only: true
+#     credentials.secret: secret
+#     securityConstraints:
+#        -  authRoles:
+#           - user
+#             name: protected
+#             securityCollections:
+#             - patterns:
+#                 - /*
+#     policy-enforcer-config:
+#         lazy-load-paths: true
+#         paths:
+#         - path: /api/admin
+#           claimInformationPointConfig:
+#             claims[some-claim]: {request.parameter['parameter-a']}
+
+management.endpoints.web.exposure.include: "*"
+management.endpoint.health.show-details: always
+
+management.health.diskspace.enabled: false
+management.health.circuitbreakers.enabled: true
+management.health.ratelimiters.enabled: true
+
+info:
+    name: ${spring.application.name}
+    description: resilience4j demo
+    environment: ${spring.profiles.active}
+    version: 0.0.1
+
+management.metrics.tags.application: ${spring.application.name}
+management.metrics.distribution.percentiles-histogram.http.server.requests: true
+management.metrics.distribution.percentiles-histogram.resilience4j.circuitbreaker.calls: true
+
+resilience4j.circuitbreaker:
+    configs:
+        default:
+            registerHealthIndicator: true
+            slidingWindowSize: 10
+            minimumNumberOfCalls: 5
+            permittedNumberOfCallsInHalfOpenState: 3
+            automaticTransitionFromOpenToHalfOpenEnabled: true
+            waitDurationInOpenState: 5s
+            failureRateThreshold: 50
+            eventConsumerBufferSize: 10
+            recordExceptions:
+                - org.springframework.web.client.HttpServerErrorException
+                - java.util.concurrent.TimeoutException
+                - java.io.IOException
+            ignoreExceptions:
+                - com.hrjk.fin.demo.exception.BusinessException
+                - org.springframework.security.access.AccessDeniedException
+        shared:
+            slidingWindowSize: 100
+            permittedNumberOfCallsInHalfOpenState: 30
+            waitDurationInOpenState: 1s
+            failureRateThreshold: 50
+            eventConsumerBufferSize: 10
+            ignoreExceptions:
+                - com.hrjk.fin.demo.exception.BusinessException
+                - org.springframework.security.access.AccessDeniedException
+    instances:
+        backendA:
+            baseConfig: default
+        backendB:
+            registerHealthIndicator: true
+            slidingWindowSize: 10
+            minimumNumberOfCalls: 10
+            permittedNumberOfCallsInHalfOpenState: 3
+            waitDurationInOpenState: 5s
+            failureRateThreshold: 50
+            eventConsumerBufferSize: 10
+            recordFailurePredicate: com.hrjk.fin.demo.exception.RecordFailurePredicate
+resilience4j.retry:
+    configs:
+        default:
+            maxRetryAttempts: 3
+            waitDuration: 100
+            retryExceptions:
+                - org.springframework.web.client.HttpServerErrorException
+                - java.util.concurrent.TimeoutException
+                - java.io.IOException
+            ignoreExceptions:
+                - com.hrjk.fin.demo.exception.BusinessException
+                - org.springframework.security.access.AccessDeniedException
+    instances:
+        backendA:
+            baseConfig: default
+        backendB:
+            baseConfig: default
+resilience4j.bulkhead:
+    configs:
+        default:
+            maxConcurrentCalls: 100
+    instances:
+        backendA:
+            maxConcurrentCalls: 10
+        backendB:
+            maxWaitDuration: 10ms
+            maxConcurrentCalls: 20
+
+resilience4j.thread-pool-bulkhead:
+    configs:
+        default:
+            maxThreadPoolSize: 4
+            coreThreadPoolSize: 2
+            queueCapacity: 2
+    instances:
+        backendA:
+            baseConfig: default
+        backendB:
+            maxThreadPoolSize: 1
+            coreThreadPoolSize: 1
+            queueCapacity: 1
+
+resilience4j.ratelimiter:
+    configs:
+        default:
+            registerHealthIndicator: false
+            limitForPeriod: 1
+            limitRefreshPeriod: 3s
+            timeoutDuration: 3s
+            eventConsumerBufferSize: 100
+    instances:
+        backendA:
+            baseConfig: default
+        backendB:
+            limitForPeriod: 1
+            limitRefreshPeriod: 10s
+            timeoutDuration: 3s
+resilience4j:
+    configs:
+        default:
+            cancelRunningFuture: false
+            timeoutDuration: 2s
+    instances:
+        backendA:
+            baseConfig: default
+        backendB:
+            baseConfig: default
