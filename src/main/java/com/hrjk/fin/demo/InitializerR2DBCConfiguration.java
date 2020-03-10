@@ -24,6 +24,7 @@ public class InitializerR2DBCConfiguration {
 
 		CompositeDatabasePopulator populator = new CompositeDatabasePopulator();
 		populator.addPopulators(new ResourceDatabasePopulator(new ClassPathResource("schema.sql")));
+		//FIXME 可以加入更多sql脚本
 		// populator.addPopulators(new ResourceDatabasePopulator(new ClassPathResource("com/foo/sql/test-data1.sql")));
 		initializer.setDatabasePopulator(populator);
 

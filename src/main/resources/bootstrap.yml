@@ -11,7 +11,7 @@ spring:
                 max-interval: 5000
             config:
                 #acl-token: ''
-                enabled: false
+                enabled: true
                 prefix: config
                 #defaultContext: apps
                 profileSeparator: "::"
