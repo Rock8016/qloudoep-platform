@@ -11,7 +11,7 @@ management:
 
 spring:
     application:
-        name: "springcloud-demo"
+        name: "springcloudemo"
     main:
         lazy-initialization: true
         allow-bean-definition-overriding: false
@@ -20,26 +20,26 @@ spring:
     # flyway:
     #     enabled: true
     #     locations: classpath:db/migration
-    #     url: jdbc:mysql://192.168.11.230/tags
+    #     url: jdbc:mysql://mariadb.default.svc.cluster.local/tags
     #     username: root
     #     password: 'hrjk@123'
     security:
         oauth2:
             resourceserver:
                 # opaque-token:
-                #     introspection-uri: http://192.168.11.230:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/token/introspect
+                #     introspection-uri: http://keycloak-http-default.service.consul:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/token/introspect
                 #     client-id: spring-security
                 #     client-secret: 40c00387-ed52-4857-9b1f-36a84803e654
                 jwt:
-                    jwk-set-uri: http://192.168.11.230:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/certs
+                    jwk-set-uri: http://keycloak.service.consul:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/certs
                 #     public-key-location: 'classpath:keycloak-cert.pub'
-                #     issuer-uri: http://192.168.11.230:8080/auth/realms/spring-boot-quickstart
-                #     jwk-set-uri:  http://192.168.11.230:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/certs
+                #     issuer-uri: http://keycloak-http-default.service.consul:8080/auth/realms/spring-boot-quickstart
+                #     jwk-set-uri:  http://keycloak-http-default.service.consul:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/certs
             # useful for front-end app only
             # client:
             #     provider:
             #         keycloak:
-            #             issuer-uri: http://192.168.11.230:8080/auth/realms/spring-boot-quickstart
+            #             issuer-uri: http://keycloak-http-default.service.consul:8080/auth/realms/spring-boot-quickstart
             #     registration:
             #         keycloak:
             #             client-id: spring-security
@@ -49,7 +49,7 @@ spring:
 
     # R2DBC config
     r2dbc:
-        url: "r2dbc:mysql://192.168.11.230/tags"
+        url: "r2dbc:mysql://mariadb.default.svc.cluster.local/tags"
         username: root
         password: "hrjk@123"
         initialization-mode: always
@@ -69,7 +69,7 @@ spring:
             resilience4j:
                 enabled: true
         bus:
-            enabled: true
+            enabled: false
             destination: springCloudBus
             ack:
                 enabled: true
@@ -81,7 +81,7 @@ spring:
         consul:
             enabled: true
             scheme: http
-            host: localhost
+            host: consul.service.consul
             port: 8500
             retry:
                 initial-interval: 2000
@@ -97,17 +97,19 @@ spring:
                 instance-id: ${spring.application.name}:${server.port}
                 #instance-id: 'springcloud-demo:8888'
                 #server-list-query-tags: type=cloudservice
+                prefer-ip-address: true
                 register-health-check: true
-                catalog-services-watch-timeout: 3
-                catalog-services-watch-delay: 3000
+                catalog-services-watch-timeout: 6
+                catalog-services-watch-delay: 6000
 
                 health-check-tls-skip-verify: true
-                health-check-timeout: 6s
+                health-check-timeout: 10s
                 health-check-path: /actuator/health
-                health-check-interval: 30s
-                health-check-critical-timeout: 60s
-    kafka:
-        bootstrap-servers: 192.168.11.230:9092 #配置 kafka 服务器的地址和端口
+                health-check-interval: 10s
+                health-check-critical-timeout: 20m
+                # health-check-url: http://springcloudemo.service.consul:8888/actuator/health
+    # kafka:
+    #     bootstrap-servers: 192.168.11.230:9092 #配置 kafka 服务器的地址和端口
         #kafka groupId must be configured by spring.cloud.stream.default.group
         #consumer:
         #    group-id: SpringCloud-Bus

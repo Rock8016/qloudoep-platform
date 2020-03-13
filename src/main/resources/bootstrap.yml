@@ -3,7 +3,7 @@ spring:
         consul:
             enabled: true
             scheme: http
-            host: localhost
+            host: consul.service.consul
             port: 8500
             retry:
                 initial-interval: 2000
