@@ -93,7 +93,21 @@ spring:
                 register: true
                 deregister: true
                 #datacenters: dc1
-                tags: cloudservice
+                tags: 
+                - cloudservice
+                - cloudapi=true
+                - traefik.enable=true
+                - traefik.http.middlewares.qmsauthn.jwtauth.jwkUrl=http://keycloak.service.consul:8080/auth/realms/spring-boot-quickstart/protocol/openid-connect/certs
+                - traefik.http.middlewares.qmsauthn.jwtauth.jwtType=Bearer
+                - traefik.http.middlewares.qmsauthn.jwtauth.removeHeader=false
+                - traefik.http.middlewares.qmsauthn.jwtauth.headerField=X-Authenticated-User
+                - traefik.http.routers.springcloudemo.entrypoints=web
+                - traefik.http.routers.springcloudemo.rule=Host( `demo.qloud.io` ) 
+                - traefik.http.routers.springcloudemo.service=springcloudemo
+                - traefik.http.routers.springcloudemo.middlewares=qmsauthn
+                # - traefik.http.services.springcloudemo.loadbalancer.server.port=8888
+                # - traefik.http.services.springcloudemo.loadbalancer.passhostheader=true
+                # - traefik.http.services.springcloudemo.loadbalancer.sticky=true
                 instance-id: ${spring.application.name}:${server.port}
                 #instance-id: 'springcloud-demo:8888'
                 #server-list-query-tags: type=cloudservice
